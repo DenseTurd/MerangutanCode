@@ -1,0 +1,58 @@
+#pragma kernel CSMain
+
+#include "UnityCG.cginc"
+
+#define PI 3.14159265359
+
+struct Particle
+{
+    float2 ScaleRange;
+    float2 Speed;
+    float RotationRange;
+
+    float3 Direction;
+    float DirectionVariance;
+
+    float GravityScale;
+    float3 GravityDirection;
+
+    float Drag;
+
+    float3 Pos;
+    float3 Rot;
+    float3 Scale;
+    float LifeTime;
+
+    int Active;
+};
+
+RWStructuredBuffer<Particle> particleBuffer;
+
+float3 Translate(float3 position, float3 direction, float speed)
+{
+    position.x += direction.x * speed * unity_DeltaTime.x;
+    position.y += direction.y * speed * unity_DeltaTime.x;
+    position.z += direction.z * speed * unity_DeltaTime.x;
+    return position;
+}
+
+
+
+[numthreads(1, 1024, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    if (particleBuffer[id.y].Active == 1)
+    {
+        particleBuffer[id.y].Pos = Translate(particleBuffer[id.y].Pos, particleBuffer[id.y].Direction, particleBuffer[id.y].Speed);
+
+        particleBuffer[id.y].Rot = float3(0, 0, 45);
+
+        particleBuffer[id.y].Scale = float3 (particleBuffer[id.y].ScaleRange.x, particleBuffer[id.y].ScaleRange.y, particleBuffer[id.y].ScaleRange.x);
+
+        particleBuffer[id.y].LifeTime -= unity_DeltaTime.x;
+    }
+    else
+    {
+        particleBuffer[id.y].Scale = float3(0, 0, 0);
+    }
+}
